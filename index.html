@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSU NCAR Ida Project</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+    <script src="leaflet-side-by-side.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="visualization-prompt">
+        <h2>What might storm surge flood damages look like for people of different incomes under a severe emissions scenario in 2071?</h2>
+    </div>
+    <div id="map"></div>
+</body>
+</html>
+
+<script>
+    var map = L.map('map', {
+        minZoom: 6,
+        maxZoom: 12,
+        maxBounds: [
+            [20, -111.5],
+            [40, -71.5]
+        ],
+        maxBoundsViscosity: 1,
+        bounceAtZoomLimits: false
+    }).setView([30, -91.5], 8);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd'
+    }).addTo(map);
+
+    // properly center and expand map tiles on load
+    setTimeout(function () {
+        map.invalidateSize();
+    }, 100);
+
+    map.createPane("left")
+    map.createPane("right")
+    map.createPane("labels")
+
+    // placeholders
+    palette1 = ['#f7fcf0', '#e0f3db', '#ccebc5', '#a8ddb5', '#7bccc4', '#4eb3d3', '#2b8cbe', '#08589e']
+    palette2 = ['#ffffe5', '#fff7bc', '#fee391', '#fec44f', '#fe9929', '#ec7014', '#cc4c02', '#8c2d04']
+
+    async function loadTracts() {
+        // loading in and drawing census tract boundaries
+        const response = await fetch("census_tracts.geojson");
+        const data = await response.json();
+
+        const environmentalLayer = L.geoJSON(data, 
+            { 
+                style: function() {
+                    return {
+                        color: 'white',
+                        weight: 0.5,
+                        fillOpacity: 0.65,
+                        fillColor: palette2[Math.floor(Math.random() * palette2.length)]
+                    };
+                },
+                pane: 'left' 
+            }
+        ).addTo(this.map);
+
+        const socialLayer = L.geoJSON(data, 
+            { 
+                style: function() {
+                    return {
+                        color: 'white',
+                        weight: 0.5,
+                        fillOpacity: 0.65,
+                        fillColor: palette1[Math.floor(Math.random() * palette1.length)]
+                    };
+                },
+                pane: 'right' 
+            }
+        ).addTo(this.map);
+        
+        const comparator = L.control.sideBySide([], []).addTo(this.map);
+        
+        comparator.setLeftLayers(environmentalLayer);
+        comparator.setRightLayers(socialLayer)  
+    }
+    loadTracts();
+
+    // add labels layer on top
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        pane: 'labels'
+    }).addTo(map);
+
+</script>
+
+<style>
+    .poppins-extralight {
+        font-family: "Poppins", sans-serif;
+        font-weight: 200;
+        font-style: normal;
+    }
+
+    .poppins-light {
+        font-family: "Poppins", sans-serif;
+        font-weight: 300;
+        font-style: normal;
+    }
+
+    .poppins-regular {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    .poppins-medium {
+        font-family: "Poppins", sans-serif;
+        font-weight: 500;
+        font-style: normal;
+    }
+
+    .poppins-semibold {
+        font-family: "Poppins", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+    }
+
+    .poppins-bold {
+        font-family: "Poppins", sans-serif;
+        font-weight: 700;
+        font-style: normal;
+    }
+
+    .poppins-extralight-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 200;
+        font-style: italic;
+    }
+
+    .poppins-light-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 300;
+        font-style: italic;
+    }
+
+    .poppins-regular-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: italic;
+    }
+
+    .poppins-medium-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 500;
+        font-style: italic;
+    }
+
+    .poppins-semibold-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 600;
+        font-style: italic;
+    }
+
+    .poppins-bold-italic {
+        font-family: "Poppins", sans-serif;
+        font-weight: 700;
+        font-style: italic;
+    }
+
+    html, body {
+        height: 100vh;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+    }
+
+    #visualization-prompt {
+        height: 15vh;
+        display: none;
+    }
+
+    #map { 
+        height: 100vh; 
+        width: 100%;
+    }
+/* 
+    .leaflet-sbs-divider {
+        background-color: gray;
+    } */
+
+    #visualization-prompt h2 {
+        font-weight: normal;
+        text-align: center;
+        padding: 1em 0.15em;
+        margin: 0;
+    }
+</style>
